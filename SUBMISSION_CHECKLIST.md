@@ -2,6 +2,25 @@
 
 Use this checklist to ensure you have completed all requirements before submitting your assignment.
 
+---
+
+## 🔑 QUICK CREDENTIALS REFERENCE
+
+**Both services are running! Use these to login:**
+
+### Jenkins - http://localhost:8080
+- **Unlock Password**: `7ce20481d7cd4b20a0bd56f874b6ec01`
+- *(Create your own admin user during setup)*
+
+### SonarQube - http://localhost:9000
+- **Username**: `admin`
+- **Password**: `admin`
+- *(Change password on first login)*
+
+**📄 See CREDENTIALS.md for complete details**
+
+---
+
 ## ✅ Part 1: Code and Configuration (COMPLETED)
 
 - ✅ Flask REST API with 9 endpoints (`aceest_fitness_app.py`)
