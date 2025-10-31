@@ -1,0 +1,61 @@
+# Istio VirtualService for Shadow Deployment with Traffic Mirroring
+# Requires Istio service mesh to be installed in the cluster
+
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: aceest-fitness-shadow-vs
+  namespace: aceest-fitness
+spec:
+  hosts:
+  - aceest-fitness-production-service
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: aceest-fitness-production-service
+        port:
+          number: 80
+      weight: 100  # All real traffic goes to production
+    mirror:
+      host: aceest-fitness-shadow-service
+      port:
+        number: 80
+    mirrorPercentage:
+      value: 100.0  # Mirror 100% of traffic to shadow
+
+---
+# DestinationRule for production
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: aceest-fitness-production-dr
+  namespace: aceest-fitness
+spec:
+  host: aceest-fitness-production-service
+  trafficPolicy:
+    connectionPool:
+      http:
+        http1MaxPendingRequests: 100
+        maxRequestsPerConnection: 2
+    loadBalancer:
+      simple: ROUND_ROBIN
+
+---
+# DestinationRule for shadow
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: aceest-fitness-shadow-dr
+  namespace: aceest-fitness
+spec:
+  host: aceest-fitness-shadow-service
+  trafficPolicy:
+    connectionPool:
+      http:
+        http1MaxPendingRequests: 100
+        maxRequestsPerConnection: 2
+    loadBalancer:
+      simple: ROUND_ROBIN

@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-fitness-production-service
+  namespace: aceest-fitness
+  labels:
+    app: aceest-fitness
+    version: production
+spec:
+  type: LoadBalancer
+  selector:
+    app: aceest-fitness
+    version: production
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 5000
+    nodePort: 30003
+  sessionAffinity: None
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-fitness-shadow-service
+  namespace: aceest-fitness
+  labels:
+    app: aceest-fitness
+    version: shadow
+spec:
+  type: ClusterIP  # Shadow service doesn't need external access
+  selector:
+    app: aceest-fitness
+    version: shadow
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 5000

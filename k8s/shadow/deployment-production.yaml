@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aceest-fitness-production
+  namespace: aceest-fitness
+  labels:
+    app: aceest-fitness
+    strategy: shadow
+    version: production
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: aceest-fitness
+      version: production
+  template:
+    metadata:
+      labels:
+        app: aceest-fitness
+        strategy: shadow
+        version: production
+    spec:
+      containers:
+      - name: aceest-fitness
+        image: docker.io/aceest-fitness:v1.3.0  # Stable production version
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+          name: http
+          protocol: TCP
+        env:
+        - name: PORT
+          value: "5000"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: VERSION_TYPE
+          value: "PRODUCTION"
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3

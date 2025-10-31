@@ -1,0 +1,113 @@
+# Istio VirtualService for A/B Testing
+# Routes traffic based on headers, cookies, or percentage split
+
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: aceest-fitness-ab-testing-vs
+  namespace: aceest-fitness
+spec:
+  hosts:
+  - aceest-fitness-service
+  http:
+  # Rule 1: Route based on custom header (for testing)
+  - match:
+    - headers:
+        x-version:
+          exact: "b"
+    route:
+    - destination:
+        host: aceest-fitness-version-b-service
+        port:
+          number: 80
+      weight: 100
+
+  # Rule 2: Route based on user cookie (sticky sessions for consistent UX)
+  - match:
+    - headers:
+        cookie:
+          regex: ".*ab_test=version_b.*"
+    route:
+    - destination:
+        host: aceest-fitness-version-b-service
+        port:
+          number: 80
+      weight: 100
+
+  # Rule 3: Default 50/50 split for all other traffic
+  - route:
+    - destination:
+        host: aceest-fitness-version-a-service
+        port:
+          number: 80
+      weight: 50  # 50% to Version A
+    - destination:
+        host: aceest-fitness-version-b-service
+        port:
+          number: 80
+      weight: 50  # 50% to Version B
+
+---
+# Alternative: 80/20 split (80% A, 20% B)
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: aceest-fitness-ab-testing-80-20-vs
+  namespace: aceest-fitness
+spec:
+  hosts:
+  - aceest-fitness-service
+  http:
+  - route:
+    - destination:
+        host: aceest-fitness-version-a-service
+        port:
+          number: 80
+      weight: 80  # 80% to Version A (control)
+    - destination:
+        host: aceest-fitness-version-b-service
+        port:
+          number: 80
+      weight: 20  # 20% to Version B (variant)
+
+---
+# DestinationRule for Version A
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: aceest-fitness-version-a-dr
+  namespace: aceest-fitness
+spec:
+  host: aceest-fitness-version-a-service
+  trafficPolicy:
+    connectionPool:
+      http:
+        http1MaxPendingRequests: 100
+        maxRequestsPerConnection: 2
+    loadBalancer:
+      simple: ROUND_ROBIN
+      consistentHash:
+        httpCookie:
+          name: "ab_test"
+          ttl: 86400s  # 24 hours
+
+---
+# DestinationRule for Version B
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: aceest-fitness-version-b-dr
+  namespace: aceest-fitness
+spec:
+  host: aceest-fitness-version-b-service
+  trafficPolicy:
+    connectionPool:
+      http:
+        http1MaxPendingRequests: 100
+        maxRequestsPerConnection: 2
+    loadBalancer:
+      simple: ROUND_ROBIN
+      consistentHash:
+        httpCookie:
+          name: "ab_test"
+          ttl: 86400s  # 24 hours

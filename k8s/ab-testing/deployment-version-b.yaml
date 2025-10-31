@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aceest-fitness-version-b
+  namespace: aceest-fitness
+  labels:
+    app: aceest-fitness
+    strategy: ab-testing
+    version: version-b
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: aceest-fitness
+      version: version-b
+  template:
+    metadata:
+      labels:
+        app: aceest-fitness
+        strategy: ab-testing
+        version: version-b
+    spec:
+      containers:
+      - name: aceest-fitness
+        image: docker.io/aceest-fitness:latest  # Version B (new/variant)
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5000
+          name: http
+          protocol: TCP
+        env:
+        - name: PORT
+          value: "5000"
+        - name: ENVIRONMENT
+          value: "production"
+        - name: AB_VERSION
+          value: "B"
+        - name: FEATURE_FLAG_NEW_UI
+          value: "true"  # New UI
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 1
+          failureThreshold: 3

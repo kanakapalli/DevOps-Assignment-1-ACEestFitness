@@ -75,11 +75,27 @@ All assignment requirements have been successfully implemented:
 - Includes promote and rollback scripts
 - Port: 30002
 
+#### 4. Shadow
+- Location: `k8s/shadow/`
+- Mirrored traffic testing
+- Zero user impact
+- Requires Istio for traffic mirroring
+- Port: 30003
+
+#### 5. A/B Testing
+- Location: `k8s/ab-testing/`
+- Split traffic for experiments
+- Header/cookie-based routing
+- Metrics comparison
+- Port: 30004
+
 ### ✅ Documentation
-- **ASSIGNMENT2_README.md**: Complete technical documentation (2700+ lines)
-- **QUICKSTART.md**: This file
-- Deployment guides for all strategies
+- **ASSIGNMENT_REPORT.md**: Concise 2-3 page submission report
+- **ASSIGNMENT2_README.md**: Complete technical documentation (3000+ lines)
+- **QUICKSTART.md**: This file (fast setup guide)
+- Deployment guides for all 5 strategies
 - Troubleshooting sections
+- Individual READMEs in each k8s strategy folder
 
 ## Running the Application Locally
 
@@ -203,10 +219,10 @@ curl http://localhost:5000/progress
 
 - **Test Coverage**: 29/29 tests passing (100%)
 - **Docker Build**: Successful
-- **Deployment Strategies**: 3 (Rolling, Blue-Green, Canary)
+- **Deployment Strategies**: 5 (Rolling, Blue-Green, Canary, Shadow, A/B Testing)
 - **API Endpoints**: 9
 - **Code Lines**: ~500 (app) + ~300 (tests)
-- **Documentation**: 2700+ lines
+- **Documentation**: 5000+ lines (including all READMEs and reports)
 
 ## Submission Checklist
 
@@ -216,7 +232,7 @@ curl http://localhost:5000/progress
 - ✅ Dockerfile with optimizations
 - ✅ Jenkinsfile with complete CI/CD pipeline
 - ✅ SonarQube configuration
-- ✅ Kubernetes manifests for 3 deployment strategies
+- ✅ Kubernetes manifests for 5 deployment strategies (Rolling, Blue-Green, Canary, Shadow, A/B Testing)
 - ✅ Complete documentation (README + guides)
 - ✅ All files committed to GitHub branch `assignment-2-cicd`
 

@@ -169,6 +169,139 @@ kubectl logs -f deployment/aceest-fitness-canary -n aceest-fitness
 
 **Access**: http://localhost:30002
 
+### 4. Shadow Deployment
+
+**Use Case**: Production testing with zero user impact
+
+**Features**:
+- New version receives mirrored production traffic
+- Shadow responses are logged but discarded
+- Zero risk to real users
+- Real traffic testing for validation
+- Performance and behavior comparison
+
+**Deployment Process**:
+
+1. Deploy production and shadow versions:
+```bash
+kubectl apply -f k8s/shadow/deployment-production.yaml
+kubectl apply -f k8s/shadow/deployment-shadow.yaml
+kubectl apply -f k8s/shadow/service.yaml
+```
+
+2. Apply Istio traffic mirroring (requires Istio):
+```bash
+kubectl apply -f k8s/shadow/virtualservice-istio.yaml
+```
+
+3. Monitor shadow deployment logs:
+```bash
+kubectl logs -f deployment/aceest-fitness-shadow -n aceest-fitness
+```
+
+4. Compare metrics and promote if successful:
+```bash
+# Update production to shadow image
+kubectl set image deployment/aceest-fitness-production \
+  aceest-fitness=$(kubectl get deployment aceest-fitness-shadow -n aceest-fitness -o jsonpath='{.spec.template.spec.containers[0].image}') \
+  -n aceest-fitness
+```
+
+**Traffic Mirroring**:
+- Production: All real traffic (100%)
+- Shadow: Mirrored traffic (100% or configurable)
+
+**Access**: http://localhost:30003
+
+**Note**: Requires Istio service mesh or Nginx proxy for traffic mirroring.
+
+### 5. A/B Testing Deployment
+
+**Use Case**: Data-driven decisions through controlled experiments
+
+**Features**:
+- Two versions running simultaneously
+- Traffic split by percentage, headers, or user segments
+- Sticky sessions for consistent user experience
+- Metrics comparison for decision making
+- Gradual rollout control
+
+**Deployment Process**:
+
+1. Deploy both versions:
+```bash
+kubectl apply -f k8s/ab-testing/deployment-version-a.yaml
+kubectl apply -f k8s/ab-testing/deployment-version-b.yaml
+kubectl apply -f k8s/ab-testing/service.yaml
+```
+
+2. Configure traffic routing (requires Istio):
+```bash
+# 50/50 split
+kubectl apply -f k8s/ab-testing/virtualservice-istio.yaml
+```
+
+3. Test different versions:
+```bash
+# Normal request (50/50 distribution)
+curl http://localhost:30004/
+
+# Force Version B with header
+curl -H "x-version: b" http://localhost:30004/
+
+# Use cookie for sticky session
+curl -H "Cookie: ab_test=version_b" http://localhost:30004/
+```
+
+4. Monitor and compare metrics:
+```bash
+# Version A logs
+kubectl logs deployment/aceest-fitness-version-a -n aceest-fitness
+
+# Version B logs
+kubectl logs deployment/aceest-fitness-version-b -n aceest-fitness
+```
+
+5. Promote winning version to 100%:
+```bash
+# Route all traffic to Version B
+kubectl patch virtualservice aceest-fitness-ab-testing-vs -n aceest-fitness --type merge -p '
+{
+  "spec": {
+    "http": [{
+      "route": [{
+        "destination": {
+          "host": "aceest-fitness-version-b-service",
+          "port": {"number": 80}
+        },
+        "weight": 100
+      }]
+    }]
+  }
+}'
+```
+
+**Traffic Distribution Options**:
+- 50/50 split (balanced testing)
+- 80/20 split (conservative)
+- 90/10 split (minimal risk)
+- Header-based routing
+- Cookie-based sticky sessions
+
+**Access**: http://localhost:30004
+
+**Note**: Requires Istio service mesh for advanced routing capabilities.
+
+## Deployment Strategy Comparison
+
+| Strategy | Use Case | Downtime | Rollback Speed | Resource Cost | Complexity |
+|----------|----------|----------|----------------|---------------|------------|
+| **Rolling Update** | Standard deployments | Zero | Fast | Low | Low |
+| **Blue-Green** | Major releases | Zero | Instant | High (2x) | Medium |
+| **Canary** | Risk mitigation | Zero | Fast | Medium | Medium |
+| **Shadow** | Safe testing | Zero | N/A | Medium | High |
+| **A/B Testing** | Feature validation | Zero | Fast | High | High |
+
 ## Testing Strategy
 
 ### Unit Tests (29 test cases)

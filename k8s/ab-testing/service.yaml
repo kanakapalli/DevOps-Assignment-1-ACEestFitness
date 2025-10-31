@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-fitness-service
+  namespace: aceest-fitness
+  labels:
+    app: aceest-fitness
+spec:
+  type: LoadBalancer
+  selector:
+    app: aceest-fitness  # Matches both version-a and version-b
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 5000
+    nodePort: 30004
+  sessionAffinity: None
+
+---
+# Service for Version A
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-fitness-version-a-service
+  namespace: aceest-fitness
+  labels:
+    app: aceest-fitness
+    version: version-a
+spec:
+  type: ClusterIP
+  selector:
+    app: aceest-fitness
+    version: version-a
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 5000
+
+---
+# Service for Version B
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-fitness-version-b-service
+  namespace: aceest-fitness
+  labels:
+    app: aceest-fitness
+    version: version-b
+spec:
+  type: ClusterIP
+  selector:
+    app: aceest-fitness
+    version: version-b
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 5000
