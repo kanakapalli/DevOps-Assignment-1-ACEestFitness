@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-fitness-service
+  namespace: aceest-fitness
+  labels:
+    app: aceest-fitness
+spec:
+  type: LoadBalancer
+  selector:
+    app: aceest-fitness  # Matches both stable and canary
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 5000
+    nodePort: 30002
+  sessionAffinity: None
+
+---
+# Service specifically for stable version (for testing)
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-fitness-stable-service
+  namespace: aceest-fitness
+  labels:
+    app: aceest-fitness
+    track: stable
+spec:
+  type: ClusterIP
+  selector:
+    app: aceest-fitness
+    track: stable
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 5000
+
+---
+# Service specifically for canary version (for testing)
+apiVersion: v1
+kind: Service
+metadata:
+  name: aceest-fitness-canary-service
+  namespace: aceest-fitness
+  labels:
+    app: aceest-fitness
+    track: canary
+spec:
+  type: ClusterIP
+  selector:
+    app: aceest-fitness
+    track: canary
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 5000
